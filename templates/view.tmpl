@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+
+<html>
+
+  <head>
+	<title>View facilities</title>
+	<!-- Changed by: , 09-Jul-2010 -->
+	
+	<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+	<link type="text/css" rel="stylesheet" href="/stylesheets/main.css" />
+
+	<script src="http://maps.google.com/maps/api/js?sensor=false" type="text/javascript"></script>
+	<script src="http://code.jquery.com/jquery-1.4.2.js"></script>
+	<!-- <script src="js/json2.js"></script> -->
+    
+	<script type="text/javascript">
+	  MARKERS_ARRAY = [];
+	  FACILITIES_MODEL = {};
+	  INST_NAME = "{{ inst_name }}";
+	  UNGUESSABLE_ID = "{{ unguessable_id }}";
+	  
+	  function dumpProps (ob) {
+	  	var msg = "";
+		for (var p in ob) {
+			msg = msg + p + ": " + ob[p] + ".  ";
+		}
+		msg + "\nEND.";
+		return msg;
+	  }
+
+	  function make_map() {
+	    // Base map
+		var latlng = new google.maps.LatLng(47.038, -122.899);
+		var myOptions = {
+			zoom: 8,
+			center: latlng,
+			mapTypeId: google.maps.MapTypeId.ROADMAP
+		};
+		var map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
+
+		// Facilities markers -- generate a bunch of JS 
+		//    via django template loop, store array "globally". 
+		{% for bldg in bldg_table %}
+			var pt = "{{ bldg.pt }}";
+			var name = "{{ bldg.name }}";
+			var myLatLong = new google.maps.LatLng( {{ bldg.pt }} );
+			var marker = new google.maps.Marker({position: myLatLong, title:"{{ bldg.name }}"});
+			marker.setDraggable(true);
+			marker.setMap(map); 
+			google.maps.event.addListener(marker, 'mouseup', updateMarker);	
+			MARKERS_ARRAY.push(marker);
+			FACILITIES_MODEL[name] = {'name':name, 'pt':pt, 'latlong':(myLatLong.toString())};
+		{% endfor %}
+     }
+
+	function updateMarker (event) {
+		// updates global FACILITIES_MODEL on a button release (after dragging, in theory)
+		FACILITIES_MODEL[this.title].pt = this.getPosition().toString();
+		//alert(FACILITIES_MODEL[this.title].name + ":" + FACILITIES_MODEL[this.title].pt);	
+	}
+	
+	function updateFacilities() {
+		// Iterate over the markers, parse out the data, remunge
+		//   into a string, send to the main URL in a POST.
+		//alert (dumpProps(FACILITIES_MODEL));
+		facmodel_json = JSON.stringify(FACILITIES_MODEL);
+		$.ajax({type: 'POST',
+			url: './update',
+			data: {unguessable_id:UNGUESSABLE_ID, model:facmodel_json}});
+			//success: function(data, textStatus, XMLHttpRequest){alert('Uploaded Data: ' + textStatus)}});
+	}
+
+	</script>
+  </head>
+
+  <body onload="make_map()">
+
+	<p> Buildings in facility {{ inst_name }} </p>
+	
+	<div>
+		<input onclick="updateFacilities();" type=button value="Update Facilities"/>
+	</div>
+
+	<table >
+	  {% for bldg in bldg_table %}
+		  <tr> <td>{{ bldg.inst_name }} </td> <td> {{ bldg.name }} </td> 
+					<td> {{ bldg.pt }} </td></tr>
+	  {% endfor %}
+	</table>
+
+	<hr>
+	<div id="map_canvas" style="width: 550px; height: 450px"></div>	
+
+  </body>
+</html>

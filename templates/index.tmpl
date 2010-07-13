@@ -1,0 +1,30 @@
+<html>
+  <head>
+    <title>PoiNT CHaT</title>
+    <!-- Changed by: , 09-Jul-2010 -->
+    <link type="text/css" rel="stylesheet" href="/stylesheets/main.css" />
+  </head>
+  <body>
+    
+    <h3> Greetings {{ usernick }}! </h3>
+    <p><a href="{{ url }}">{{ url_linktext }}</a></p>
+    <hr>
+
+    <h3>Upload a new institution</h3>
+    <form action="/upload" method="post">
+      <div>Institution name: <input type="text" name="inst_name" rows="1" cols="15"></textarea></div>
+      <div><p>Building coordinates (lat, long, description):</p>
+        <textarea name="bldg_table" rows="12" cols="60"></textarea></div>
+      <div><input type="submit" value="Upload"></div>
+    </form>
+    <hr>
+
+    <h3>View an institution</h3>
+    <form action="/view" method="get">
+      <div><text name="inst_name" rows="1" cols="20"></text></div>
+      <div><input type="submit" value="View"></div>
+    </form>
+    <hr>    
+
+  </body>
+</html>

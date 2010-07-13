@@ -1,0 +1,15 @@
+application: pntcht
+version: 2
+runtime: python
+api_version: 1
+
+handlers:
+- url: /stylesheets
+  static_dir: stylesheets
+
+- url: /static/html
+  static_dir: static/html
+  mime_type: text/html
+
+- url: /.*
+  script: main.py
