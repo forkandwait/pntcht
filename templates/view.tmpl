@@ -4,7 +4,7 @@
 
   <head>
 	<title>View facilities</title>
-	<!-- Changed by: , 09-Jul-2010 -->
+	<!-- Changed by: , 13-Jul-2010 -->
 	
 	<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
 	<link type="text/css" rel="stylesheet" href="/stylesheets/main.css" />
@@ -19,55 +19,54 @@
 	  INST_NAME = "{{ inst_name }}";
 	  UNGUESSABLE_ID = "{{ unguessable_id }}";
 	  
-	  function dumpProps (ob) {
-	  	var msg = "";
-		for (var p in ob) {
-			msg = msg + p + ": " + ob[p] + ".  ";
-		}
-		msg + "\nEND.";
-		return msg;
-	  }
-
 	  function make_map() {
 	    // Base map
 		var latlng = new google.maps.LatLng(47.038, -122.899);
 		var myOptions = {
-			zoom: 8,
+			zoom: 16,
 			center: latlng,
 			mapTypeId: google.maps.MapTypeId.ROADMAP
 		};
 		var map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
 
 		// Facilities markers -- generate a bunch of JS 
-		//    via django template loop, store array "globally". 
+		//    via django template loop, store array "globally".
+
+		var name = "";
+		var myLatLong = "";
+		var marker = "";
+		var bounds = new google.maps.LatLngBounds();
+
 		{% for bldg in bldg_table %}
-			var pt = "{{ bldg.pt }}";
-			var name = "{{ bldg.name }}";
-			var myLatLong = new google.maps.LatLng( {{ bldg.pt }} );
-			var marker = new google.maps.Marker({position: myLatLong, title:"{{ bldg.name }}"});
+			name = "{{ bldg.name }}";
+			myLatLong = new google.maps.LatLng( {{ bldg.pt }} );
+			marker = new google.maps.Marker({position: myLatLong, title:"{{ bldg.name }}"});
 			marker.setDraggable(true);
 			marker.setMap(map); 
-			google.maps.event.addListener(marker, 'mouseup', updateMarker);	
+			google.maps.event.addListener(marker, 'mouseup', updateMarker);
+			bounds.extend(myLatLong);
 			MARKERS_ARRAY.push(marker);
-			FACILITIES_MODEL[name] = {'name':name, 'pt':pt, 'latlong':(myLatLong.toString())};
+			FACILITIES_MODEL[name] = {'name':name, 'latlong':(myLatLong.toString())};
 		{% endfor %}
+
+		map.fitBounds(bounds);
      }
 
 	function updateMarker (event) {
 		// updates global FACILITIES_MODEL on a button release (after dragging, in theory)
-		FACILITIES_MODEL[this.title].pt = this.getPosition().toString();
-		//alert(FACILITIES_MODEL[this.title].name + ":" + FACILITIES_MODEL[this.title].pt);	
+		FACILITIES_MODEL[this.title].latlong = this.getPosition().toString();
+		//alert(FACILITIES_MODEL[this.title].name + ":" + FACILITIES_MODEL[this.title].latlong);	
 	}
 	
 	function updateFacilities() {
 		// Iterate over the markers, parse out the data, remunge
 		//   into a string, send to the main URL in a POST.
-		//alert (dumpProps(FACILITIES_MODEL));
 		facmodel_json = JSON.stringify(FACILITIES_MODEL);
 		$.ajax({type: 'POST',
 			url: './update',
-			data: {unguessable_id:UNGUESSABLE_ID, model:facmodel_json}});
-			//success: function(data, textStatus, XMLHttpRequest){alert('Uploaded Data: ' + textStatus)}});
+			data: {unguessable_id:UNGUESSABLE_ID, model:facmodel_json},
+			success: function(data, textStatus, XMLHttpRequest){alert('Uploaded Data: ' + textStatus)}});
+
 	}
 
 	</script>
@@ -75,19 +74,27 @@
 
   <body onload="make_map()">
 
-	<p> Buildings in facility {{ inst_name }} </p>
+  <p> Buildings in facility <b>"{{ inst_name }}"</b> (reload to see changes): </p>
 	
-	<div>
-		<input onclick="updateFacilities();" type=button value="Update Facilities"/>
-	</div>
-
-	<table >
+	<table border="1">
 	  {% for bldg in bldg_table %}
-		  <tr> <td>{{ bldg.inst_name }} </td> <td> {{ bldg.name }} </td> 
-					<td> {{ bldg.pt }} </td></tr>
+	    <tr>  <td> {{ bldg.name }} </td> <td> {{ bldg.pt }} </td></tr>
 	  {% endfor %}
 	</table>
 
+	<p>Comment on this change:</p>
+	<div id="comment"><input type="text" name="comment" rows="1" cols="20"></div>
+
+	<table border="1">
+	  {% for comm in comments %}
+	    <tr><td> {{ comm.user }} </td> <td> {{ comm.timestamp }}</td> <td> {{ comm.msg }} </td></tr>
+          {% endfor %}
+	</table>
+
+	<div>
+		<input onclick="updateFacilities();" type=button value="Update Facilities"/>
+	</div>
+	
 	<hr>
 	<div id="map_canvas" style="width: 550px; height: 450px"></div>	
 

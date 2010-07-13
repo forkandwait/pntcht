@@ -1,7 +1,7 @@
 <html>
   <head>
     <title>PoiNT CHaT</title>
-    <!-- Changed by: , 09-Jul-2010 -->
+    <!-- Changed by: , 13-Jul-2010 -->
     <link type="text/css" rel="stylesheet" href="/stylesheets/main.css" />
   </head>
   <body>
@@ -11,17 +11,37 @@
     <hr>
 
     <h3>Upload a new institution</h3>
+
+    <p>Enter the name of the institution and the building locations.  
+      The locations must be formatted as LATTITUDE LONGITUDE BUILDINGNAME.  
+      They will be split on whitespace, but BUILDINGNAME can contain whitespace. </p>
+
+    <p>The projection is <a href="http://spatialreference.org/ref/sr-org/6/">"Google Projection"</a>, 
+      otherwise known as <a href="http://docs.openlayers.org/library/spherical_mercator.html">"Spherical Mercator"</a>.</p>
+    
+    <p>After entering points, you will be redirected to
+    view.html?unguessable_id=SOMETHING. To have someone modify the
+    points, cut and paste this link and send it to them via email;
+    they can then move the points around and save the results. If you
+    forget to copy the unguessable_id, there is no way to recover the
+    uploaded data.</p>
+    
+    <hr>
+
     <form action="/upload" method="post">
-      <div>Institution name: <input type="text" name="inst_name" rows="1" cols="15"></textarea></div>
+      <div>Institution name: <input type="text" name="inst_name" rows="1" cols="15"/></div>
       <div><p>Building coordinates (lat, long, description):</p>
         <textarea name="bldg_table" rows="12" cols="60"></textarea></div>
+      <div>Comment:<input type="text" name="comment"/></div>
       <div><input type="submit" value="Upload"></div>
+
     </form>
     <hr>
 
     <h3>View an institution</h3>
+    <p>Enter the unguessable id into the box and press enter.</p>
     <form action="/view" method="get">
-      <div><text name="inst_name" rows="1" cols="20"></text></div>
+      <div><input type="text" name="unguessable_id" rows="1" cols="20"></div>
       <div><input type="submit" value="View"></div>
     </form>
     <hr>    
