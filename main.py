@@ -1,11 +1,12 @@
-import cgi
-import simplejson
-import os 
 import sys
+import cgi
+import os 
 import re
 import uuid
-
 import logging
+
+sys.path.append('./pymods')
+import simplejson
 
 from google.appengine.api import users
 from google.appengine.ext import webapp
