@@ -1,0 +1,5 @@
+pntcht - PoiNT CHaT                                     -*-text-*-
+
+Point Chat (pntcht) is a Google AppEngine application for
+interactively moving points around on top of a Google map and saving
+the results to a central datastore.
