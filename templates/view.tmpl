@@ -4,7 +4,7 @@
 
   <head>
 	<title>View facilities</title>
-	<!-- Changed by: , 13-Jul-2010 -->
+	<!-- Changed by: , 15-Jul-2010 -->
 	
 	<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
 	<link type="text/css" rel="stylesheet" href="/stylesheets/main.css" />
@@ -55,19 +55,26 @@
 	function updateMarker (event) {
 		// updates global FACILITIES_MODEL on a button release (after dragging, in theory)
 		FACILITIES_MODEL[this.title].latlong = this.getPosition().toString();
-		//alert(FACILITIES_MODEL[this.title].name + ":" + FACILITIES_MODEL[this.title].latlong);	
+
+		// update point table
+		
 	}
 	
 	function updateFacilities() {
-		// Iterate over the markers, parse out the data, remunge
-		//   into a string, send to the main URL in a POST.
+	        //  Send the new model back home along with comments,
+		//    and update the comments table in the DOM
+		
+		// Iterate over the markers, parse out the data, remunge into a string
 		facmodel_json = JSON.stringify(FACILITIES_MODEL);
+
+		// Send it back home
 		$.ajax({type: 'POST',
 			url: './update',
 			data: {unguessable_id:UNGUESSABLE_ID, model:facmodel_json},
 			success: function(data, textStatus, XMLHttpRequest){alert('Uploaded Data: ' + textStatus)}});
 
-	}
+		// Get comments out of the DOM and update the comments table
+	 }
 
 	</script>
   </head>
@@ -76,16 +83,16 @@
 
   <p> Buildings in facility <b>"{{ inst_name }}"</b> (reload to see changes): </p>
 	
-	<table border="1">
+	<table class="point_table" border="1">
 	  {% for bldg in bldg_table %}
-	    <tr>  <td> {{ bldg.name }} </td> <td> {{ bldg.pt }} </td></tr>
+	    <tr>  <td id="{{ bldg.name }}"> {{ bldg.name }} </td> <td id="bldg_pt"> {{ bldg.pt }} </td></tr>
 	  {% endfor %}
 	</table>
 
 	<p>Comment on this change:</p>
 	<div id="comment"><input type="text" name="comment" rows="1" cols="20"></div>
 
-	<table border="1">
+	<table class="comment_table" border="1">
 	  {% for comm in comments %}
 	    <tr><td> {{ comm.user }} </td> <td> {{ comm.timestamp }}</td> <td> {{ comm.msg }} </td></tr>
           {% endfor %}

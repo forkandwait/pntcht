@@ -1,0 +1,54 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml">
+  
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+
+    <title>Jquery Blah Blah Blah</title>
+    <!-- Changed by: , 15-Jul-2010 -->
+
+    <script src="http://code.jquery.com/jquery-1.4.2.js"></script>
+
+    <script>
+      counter = 1;
+      function updateComments() {
+        //$("<tr><td>BOO</td><td>MORE " + counter + "</td></tr>").insertAfter("#b1");
+	
+	// insert a comment at the end of the comments table
+	comm = $("#commentbox").val();
+      	$("<tr><td>BOO</td><td>MORE " + counter + " - " + comm + "</td></tr>" ).insertAfter("#comments tr:last");
+
+	// update
+	$("#bldgs #bldg_one td.coords").html("BLAH: " + counter);
+
+	counter = counter+1;
+      }           
+    </script>
+
+  </head>
+
+  <body>
+    
+    <input onclick="updateComments();" type=button value="Update Comments"/>
+    
+    <hr>
+    <input id="commentbox" type="text"/>
+
+    <hr>
+    <table id="comments">
+      <tr id="b1"><td >comment one</td><td>blah</td></tr>
+    </table>
+
+    <hr>
+    <table id="bldgs">
+      <tr id="bldg_one"><td class="bldg_name">Building 1</td><td class="coords">Coords</td></tr>
+      <tr id="blah" ><td class="bldg_name">Building 2</td><td class="coords">Coords</td></tr>
+    </table>
+
+
+
+  </body>
+
+</html>
