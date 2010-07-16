@@ -4,7 +4,7 @@
 
   <head>
 	<title>View facilities</title>
-	<!-- Changed by: , 15-Jul-2010 -->
+	<!-- Changed by: , 16-Jul-2010 -->
 	
 	<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
 	<link type="text/css" rel="stylesheet" href="/stylesheets/main.css" />
@@ -37,7 +37,23 @@
 		var marker = "";
 		var bounds = new google.maps.LatLngBounds();
 
+		function make_point(bldg_name, bldg_pt, MARKERS_ARRAY, FACILITIES_MODEL) {
+			name = bldg_name;
+			myLatLong = new google.maps.LatLng(bldg_pt);
+			marker = new google.maps.Marker({position: myLatLong, title:bldg_name});
+			marker.setDraggable(true);
+			marker.setMap(map); 
+			google.maps.event.addListener(marker, 'mouseup', updateMarker);
+			bounds.extend(myLatLong);
+			MARKERS_ARRAY.push(marker);
+			FACILITIES_MODEL[name] = {'name':name, 'latlong':(myLatLong.toString())};			
+		}
+
+
 		{% for bldg in bldg_table %}
+
+			//make_point({{ bldg.name }}, {{ bldg.pt }}, MARKERS_ARRAY, FACILITIES_MODEL);
+
 			name = "{{ bldg.name }}";
 			myLatLong = new google.maps.LatLng( {{ bldg.pt }} );
 			marker = new google.maps.Marker({position: myLatLong, title:"{{ bldg.name }}"});
@@ -50,30 +66,34 @@
 		{% endfor %}
 
 		map.fitBounds(bounds);
-     }
+        }
 
 	function updateMarker (event) {
 		// updates global FACILITIES_MODEL on a button release (after dragging, in theory)
 		FACILITIES_MODEL[this.title].latlong = this.getPosition().toString();
-
-		// update point table
 		
+		// update point table -- doesn't work yet
+		//$("#point_table #" + this.title + " #bldg_point").val(this.getPosition().toString());
+
+		//alert(this.title + " " + FACILITIES_MODEL[this.title].latlong + " " + this.getPosition().toString());
 	}
 	
 	function updateFacilities() {
 	        //  Send the new model back home along with comments,
 		//    and update the comments table in the DOM
 		
-		// Iterate over the markers, parse out the data, remunge into a string
-		facmodel_json = JSON.stringify(FACILITIES_MODEL);
-
+		// Iterate over the markers, parse out the data,
+		//     remunge into a string, get comments, build upload
+		upload_data = {unguessable_id:UNGUESSABLE_ID,
+		               model:JSON.stringify(FACILITIES_MODEL),
+			       comment:$("#comment_input").val()};
+		// alert(upload_data.unguessable_id + ", " + upload_data.comments + ", " + upload_data.model);
+		
 		// Send it back home
 		$.ajax({type: 'POST',
 			url: './update',
-			data: {unguessable_id:UNGUESSABLE_ID, model:facmodel_json},
+			data: upload_data,
 			success: function(data, textStatus, XMLHttpRequest){alert('Uploaded Data: ' + textStatus)}});
-
-		// Get comments out of the DOM and update the comments table
 	 }
 
 	</script>
@@ -83,25 +103,25 @@
 
   <p> Buildings in facility <b>"{{ inst_name }}"</b> (reload to see changes): </p>
 	
-	<table class="point_table" border="1">
+	<table id="point_table" border="1">
 	  {% for bldg in bldg_table %}
-	    <tr>  <td id="{{ bldg.name }}"> {{ bldg.name }} </td> <td id="bldg_pt"> {{ bldg.pt }} </td></tr>
+	    <tr  id="{{ bldg.name }}">  <td id="bldg_name"> {{ bldg.name }} </td> <td id="bldg_pt"> {{ bldg.pt }} </td></tr>
 	  {% endfor %}
 	</table>
 
+	<hr>
 	<p>Comment on this change:</p>
-	<div id="comment"><input type="text" name="comment" rows="1" cols="20"></div>
+	<input id="comment_input" type="text"/>
 
-	<table class="comment_table" border="1">
+	<hr>
+	<table id="comment_table" border="1">
 	  {% for comm in comments %}
 	    <tr><td> {{ comm.user }} </td> <td> {{ comm.timestamp }}</td> <td> {{ comm.msg }} </td></tr>
           {% endfor %}
 	</table>
 
-	<div>
-		<input onclick="updateFacilities();" type=button value="Update Facilities"/>
-	</div>
-	
+	<input onclick="updateFacilities();" type=button value="Update"/>
+		
 	<hr>
 	<div id="map_canvas" style="width: 550px; height: 450px"></div>	
 

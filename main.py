@@ -124,32 +124,40 @@ class UpdateInst(webapp.RequestHandler):
         ## params
         unguessable_id = self.request.get('unguessable_id')
         model = simplejson.loads(self.request.get('model'))
-        comm_msg = self.request.get('comment')
+        comment = self.request.get('comment')
 
         ## update buildings
         instq = db.GqlQuery("SELECT * FROM Institution WHERE unguessable_id = :1", unguessable_id)
         inst = instq.fetch(instq.count())[0]
-        for bldg in inst.building_set: 
-            a,b = model[bldg.name]['latlong'].strip('()').split(', ')
-            logging.debug("UpdateInst.post():updating building: %s. (%s, %s)." % (bldg.name, a, b))
-            bldg.pt = db.GeoPt(float(a), float(b))
-            bldg.put()
+        logging.debug('UpdateInst.post() unguessable_id: %s', inst.unguessable_id)
+        if inst:
+            logging.debug("UpdateInst.post: %s %s" % (inst.unguessable_id, inst.name))
+            for bldg in inst.building_set: 
+                a,b = model[bldg.name]['latlong'].strip('()').split(', ')
+                logging.debug("UpdateInst.post():updating building: %s. (%s, %s)." % (bldg.name, a, b))
+                bldg.pt = db.GeoPt(float(a), float(b))
+                bldg.put()
+                pass
+            comm = Comment()
+            comm.msg = "Points updated.  " + comment  #comm_msg
+            comm.inst = inst.key()
+            comm.put()
             pass
-
-        ## add comment
-        comm = Comment()
-        comm.msg = "Points updated.  " + comm_msg
-        comm.inst = inst.key()
-        comm.put()
+        else:
+            logging.error("UpdateInst.post: Unable to find unguessable_id = %s. Returning." % unguessable_id)
+            return
+            pass
+        
 
 ######
-application = webapp.WSGIApplication([('/', MainPage),
+def main():
+    logging.getLogger().setLevel(logging.DEBUG)
+    application = webapp.WSGIApplication([('/', MainPage),
                                       ('/upload', UploadInst),
                                       ('/view', ViewInst),
                                       ('/update', UpdateInst)],
                                      debug=True)
-def main():
-  run_wsgi_app(application)
+    run_wsgi_app(application)
 
 if __name__ == "__main__":
   main()
