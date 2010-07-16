@@ -23,7 +23,8 @@ class Building(db.Model):
     name = db.StringProperty() 
     pt = db.GeoPtProperty()
     inst = db.ReferenceProperty(Institution)
-
+    timestamp_create = db.DateTimeProperty(auto_now_add=True)
+    timestamp_mod = db.DateTimeProperty(auto_now=True)
 
 class Comment(db.Model):
     msg = db.StringProperty()

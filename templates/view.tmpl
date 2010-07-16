@@ -18,14 +18,25 @@
 	  FACILITIES_MODEL = {};
 	  INST_NAME = "{{ inst_name }}";
 	  UNGUESSABLE_ID = "{{ unguessable_id }}";
+
+	function make_point(bldg_name, bldg_pt, map, bounds, MARKERS_ARRAY, FACILITIES_MODEL) {
+		name = bldg_name;
+		myLatLong = new google.maps.LatLng(bldg_pt);
+		marker = new google.maps.Marker({position: myLatLong, title:bldg_name});
+		marker.setDraggable(true);
+		marker.setMap(map); 
+		google.maps.event.addListener(marker, 'mouseup', updateMarker);
+		bounds.extend(myLatLong);
+		FACILITIES_MODEL[name] = {'name':name, 'latlong':(myLatLong.toString())};			
+		MARKERS_ARRAY.push(marker);
+		
+	  }
+
 	  
 	  function make_map() {
 	    // Base map
-		var latlng = new google.maps.LatLng(47.038, -122.899);
 		var myOptions = {
-			zoom: 16,
-			center: latlng,
-			mapTypeId: google.maps.MapTypeId.ROADMAP
+		    mapTypeId: google.maps.MapTypeId.ROADMAP
 		};
 		var map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
 
@@ -37,22 +48,11 @@
 		var marker = "";
 		var bounds = new google.maps.LatLngBounds();
 
-		function make_point(bldg_name, bldg_pt, MARKERS_ARRAY, FACILITIES_MODEL) {
-			name = bldg_name;
-			myLatLong = new google.maps.LatLng(bldg_pt);
-			marker = new google.maps.Marker({position: myLatLong, title:bldg_name});
-			marker.setDraggable(true);
-			marker.setMap(map); 
-			google.maps.event.addListener(marker, 'mouseup', updateMarker);
-			bounds.extend(myLatLong);
-			MARKERS_ARRAY.push(marker);
-			FACILITIES_MODEL[name] = {'name':name, 'latlong':(myLatLong.toString())};			
-		}
 
 
 		{% for bldg in bldg_table %}
 
-			//make_point({{ bldg.name }}, {{ bldg.pt }}, MARKERS_ARRAY, FACILITIES_MODEL);
+			//make_point("{{ bldg.name }}", "{{ bldg.pt }}", map, bounds, MARKERS_ARRAY, FACILITIES_MODEL);
 
 			name = "{{ bldg.name }}";
 			myLatLong = new google.maps.LatLng( {{ bldg.pt }} );
@@ -65,7 +65,8 @@
 			FACILITIES_MODEL[name] = {'name':name, 'latlong':(myLatLong.toString())};
 		{% endfor %}
 
-		map.fitBounds(bounds);
+		map.setCenter(bounds.getCenter());
+		map.setZoom(14)
         }
 
 	function updateMarker (event) {
@@ -73,7 +74,11 @@
 		FACILITIES_MODEL[this.title].latlong = this.getPosition().toString();
 		
 		// update point table -- doesn't work yet
-		//$("#point_table #" + this.title + " #bldg_point").val(this.getPosition().toString());
+		sel = "#point_table #" + this.title + " #bldg_pt";
+		$(sel).html(this.getPosition().toString());
+
+		sel = "#comment_input ";
+		$(sel).val("");
 
 		//alert(this.title + " " + FACILITIES_MODEL[this.title].latlong + " " + this.getPosition().toString());
 	}
