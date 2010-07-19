@@ -18,7 +18,6 @@ class Institution(db.Model):
     name = db.StringProperty()
     unguessable_id = db.StringProperty()
 
-
 class Building(db.Model):
     name = db.StringProperty() 
     pt = db.GeoPtProperty()
@@ -53,6 +52,15 @@ class MainPage(webapp.RequestHandler):
 
 
 class UploadInst(webapp.RequestHandler):
+
+    ## Error page (TODO -- put this in a super class and inherit. Yuck.
+    def error_page(self, error_msg):
+        error_msg = "There was an error: <b>%s</b>.  <br><br>Press <b>back button</b> and fix." % error_msg
+        template_values = {"error_msg":error_msg}
+        path = os.path.join(os.path.dirname(__file__), 'templates/error.tmpl')
+        self.response.out.write(template.render(path, template_values))
+        pass
+
     ## Start an institution, parsing tabular text
     def post(self):
         if users.get_current_user():
@@ -61,7 +69,10 @@ class UploadInst(webapp.RequestHandler):
         try:
             ## store institution
             inst = Institution()
-            inst.name = self.request.get('inst_name')
+            inst.name = self.request.get('inst_name').strip()
+            if inst.name == "":
+                self.error_page("Empty institution name")
+                return
             inst.unguessable_id = str(uuid.uuid4())
             inst.put()
 
@@ -71,21 +82,25 @@ class UploadInst(webapp.RequestHandler):
             comm.inst = inst.key()
             comm.put()
 
-            ## store buildings
+            ## store buildings, normalizing all non alphanumerics to '_' so ID's work
             bldg_table_str = str(self.request.get('bldg_table')).strip()
+            if bldg_table_str == "":
+                self.error_page("Empty building field")
+                return 
             for line in re.split("\n+", bldg_table_str):
                 line2 = line.strip()
-                elems = re.split("\s+", line2, 2)
+                elems = re.split("[\s,;|]+", line2, 2)
+                bldg_name = re.sub('\W', '_', elems[2]) 
                 bldg = Building(
                     inst = inst.key(),
                     pt = db.GeoPt(float(elems[0]), float(elems[1])),
-                    name = elems[2])
+                    name = bldg_name)
                 bldg.put()
                 pass
 
             ## view the results (redirect)
             self.redirect('/view?unguessable_id=%s' % inst.unguessable_id)
-            pass
+            return
         
         except Exception, exc:
             error_msg = "There was a problem parsing input data.  Python message: \"%s\".<br>  Press <b>back button</b> and fix." % exc
@@ -113,7 +128,7 @@ class ViewInst(webapp.RequestHandler):
         ## pass to template and write
         template_values = {'unguessable_id':inst.unguessable_id,
                            'inst_name':inst.name,
-                           'comments':inst.comment_set,
+                           'comments':inst.comment_set.order('-timestamp'),
                            'bldg_table':inst.building_set}
         path = os.path.join(os.path.dirname(__file__), 'templates/view.tmpl')
         self.response.out.write(template.render(path, template_values))

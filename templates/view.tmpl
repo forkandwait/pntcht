@@ -4,7 +4,7 @@
 
   <head>
 	<title>View facilities</title>
-	<!-- Changed by: , 16-Jul-2010 -->
+	<!-- Changed by: , 18-Jul-2010 -->
 	
 	<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
 	<link type="text/css" rel="stylesheet" href="/stylesheets/main.css" />
@@ -73,10 +73,15 @@
 		// updates global FACILITIES_MODEL on a button release (after dragging, in theory)
 		FACILITIES_MODEL[this.title].latlong = this.getPosition().toString();
 		
-		// update point table -- doesn't work yet
-		sel = "#point_table #" + this.title + " #bldg_pt";
-		$(sel).html(this.getPosition().toString());
+		// update point table -- doesn't work yet, WITH SPACES IN BUILDING NAMES
+		sel_lat = "#point_table #" + this.title + " #bldg_lat";
+		$(sel_lat).html( this.getPosition().lat().toString());
+		sel_lon = "#point_table #" + this.title + " #bldg_lon";
+		$(sel_lon).html( this.getPosition().lng().toString());
 
+		//alert(oldpts + " " + this.getPosition().toString());
+
+		// null out the comment field
 		sel = "#comment_input ";
 		$(sel).val("");
 
@@ -110,7 +115,9 @@
 	
 	<table id="point_table" border="1">
 	  {% for bldg in bldg_table %}
-	    <tr  id="{{ bldg.name }}">  <td id="bldg_name"> {{ bldg.name }} </td> <td id="bldg_pt"> {{ bldg.pt }} </td></tr>
+	    <tr  id="{{ bldg.name }}">
+	      <td id="bldg_name"> {{ bldg.name }} </td> <td id="bldg_lat"> {{ bldg.pt.lat }} </td> <td id="bldg_lon"> {{ bldg.pt.lon }} </td>
+	    </tr>
 	  {% endfor %}
 	</table>
 
