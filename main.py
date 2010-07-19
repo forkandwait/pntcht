@@ -155,7 +155,6 @@ class UpdateInst(webapp.RequestHandler):
                 bldg.put()
                 pass
             comm = Comment()
-            comm.msg = "Points updated.  " + comment  #comm_msg
             comm.inst = inst.key()
             comm.put()
             pass

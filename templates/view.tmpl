@@ -4,7 +4,7 @@
 
   <head>
 	<title>View facilities</title>
-	<!-- Changed by: , 18-Jul-2010 -->
+	<!-- Changed by: , 19-Jul-2010 -->
 	
 	<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
 	<link type="text/css" rel="stylesheet" href="/stylesheets/main.css" />
@@ -114,6 +114,7 @@
   <p> Buildings in facility <b>"{{ inst_name }}"</b> (reload to see changes): </p>
 	
 	<table id="point_table" border="1">
+	  <tr><th> Building Name </th><th>Latitude</th><th>Longitude</th></tr>
 	  {% for bldg in bldg_table %}
 	    <tr  id="{{ bldg.name }}">
 	      <td id="bldg_name"> {{ bldg.name }} </td> <td id="bldg_lat"> {{ bldg.pt.lat }} </td> <td id="bldg_lon"> {{ bldg.pt.lon }} </td>
@@ -122,20 +123,24 @@
 	</table>
 
 	<hr>
-	<p>Comment on this change:</p>
-	<input id="comment_input" type="text"/>
+	<p>Comment on this change: <input id="comment_input" type="text"/> </p>
 
 	<hr>
 	<table id="comment_table" border="1">
+	  <tr><th> Change Message </th><th>Timestamp</th><th>User</th></tr>
 	  {% for comm in comments %}
-	    <tr><td> {{ comm.user }} </td> <td> {{ comm.timestamp }}</td> <td> {{ comm.msg }} </td></tr>
+	    <tr class="comment_row" id="rownum{{forloop.counter}}">
+	      <td> {{ comm.msg }} </td>
+	      <td> {{ comm.timestamp }}</td>
+	      <td> {{ comm.user }} </td>
+	    </tr>
           {% endfor %}
 	</table>
 
 	<input onclick="updateFacilities();" type=button value="Update"/>
 		
 	<hr>
-	<div id="map_canvas" style="width: 550px; height: 450px"></div>	
+	<div id="map_canvas" style="width: 450px; height: 350px"></div>	
 
   </body>
 </html>
