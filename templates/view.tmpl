@@ -4,72 +4,55 @@
 
   <head>
 	<title>View facilities</title>
-	<!-- Changed by: , 19-Jul-2010 -->
+	<!-- Changed by: , 20-Jul-2010 -->
 	
 	<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
 	<link type="text/css" rel="stylesheet" href="/stylesheets/main.css" />
 
 	<script src="http://maps.google.com/maps/api/js?sensor=false" type="text/javascript"></script>
 	<script src="http://code.jquery.com/jquery-1.4.2.js"></script>
-	<!-- <script src="js/json2.js"></script> -->
     
 	<script type="text/javascript">
-	  MARKERS_ARRAY = [];
 	  FACILITIES_MODEL = {};
 	  INST_NAME = "{{ inst_name }}";
 	  UNGUESSABLE_ID = "{{ unguessable_id }}";
 
-	function make_point(bldg_name, bldg_pt, map, bounds, MARKERS_ARRAY, FACILITIES_MODEL) {
+          function make_point(bldg_name, lat, long, map, bounds, FACILITIES_MODEL) {
 		name = bldg_name;
-		myLatLong = new google.maps.LatLng(bldg_pt);
+		myLatLong = new google.maps.LatLng(lat, long);
 		marker = new google.maps.Marker({position: myLatLong, title:bldg_name});
 		marker.setDraggable(true);
 		marker.setMap(map); 
 		google.maps.event.addListener(marker, 'mouseup', updateMarker);
 		bounds.extend(myLatLong);
 		FACILITIES_MODEL[name] = {'name':name, 'latlong':(myLatLong.toString())};			
-		MARKERS_ARRAY.push(marker);
-		
 	  }
 
 	  
-	  function make_map() {
-	    // Base map
+	  function make_map(FMODEL) {
+	        // TODO -- make this grab from a KML feed rather than generated code (blech!)
+
+	        // Base map
 		var myOptions = {
 		    mapTypeId: google.maps.MapTypeId.ROADMAP
 		};
 		var map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
 
 		// Facilities markers -- generate a bunch of JS 
-		//    via django template loop, store array "globally".
-
+		//    via django template loop, store array globally.
 		var name = "";
 		var myLatLong = "";
 		var marker = "";
 		var bounds = new google.maps.LatLngBounds();
-
-
-
 		{% for bldg in bldg_table %}
-
-			//make_point("{{ bldg.name }}", "{{ bldg.pt }}", map, bounds, MARKERS_ARRAY, FACILITIES_MODEL);
-
-			name = "{{ bldg.name }}";
-			myLatLong = new google.maps.LatLng( {{ bldg.pt }} );
-			marker = new google.maps.Marker({position: myLatLong, title:"{{ bldg.name }}"});
-			marker.setDraggable(true);
-			marker.setMap(map); 
-			google.maps.event.addListener(marker, 'mouseup', updateMarker);
-			bounds.extend(myLatLong);
-			MARKERS_ARRAY.push(marker);
-			FACILITIES_MODEL[name] = {'name':name, 'latlong':(myLatLong.toString())};
+		        make_point("{{ bldg.name }}", {{ bldg.pt }}, map, bounds, FMODEL);  // XXX bldg.pt expands 
 		{% endfor %}
 
 		map.setCenter(bounds.getCenter());
 		map.setZoom(14)
-        }
+          }
 
-	function updateMarker (event) {
+	  function updateMarker (event) {
 		// updates global FACILITIES_MODEL on a button release (after dragging, in theory)
 		FACILITIES_MODEL[this.title].latlong = this.getPosition().toString();
 		
@@ -79,37 +62,27 @@
 		sel_lon = "#point_table #" + this.title + " #bldg_lon";
 		$(sel_lon).html( this.getPosition().lng().toString());
 
-		//alert(oldpts + " " + this.getPosition().toString());
-
 		// null out the comment field
 		sel = "#comment_input ";
 		$(sel).val("");
-
-		//alert(this.title + " " + FACILITIES_MODEL[this.title].latlong + " " + this.getPosition().toString());
-	}
+	  }
 	
-	function updateFacilities() {
-	        //  Send the new model back home along with comments,
-		//    and update the comments table in the DOM
-		
-		// Iterate over the markers, parse out the data,
-		//     remunge into a string, get comments, build upload
+	  function updateFacilities() {
+		// Upload changes to server.  Iterate over the markers, parse out the data,
+		//     remunge into a string, get comments, build upload, and send home
 		upload_data = {unguessable_id:UNGUESSABLE_ID,
 		               model:JSON.stringify(FACILITIES_MODEL),
-			       comment:$("#comment_input").val()};
-		// alert(upload_data.unguessable_id + ", " + upload_data.comments + ", " + upload_data.model);
-		
-		// Send it back home
+			       comment:$("#comment_input").val()}; 
 		$.ajax({type: 'POST',
 			url: './update',
 			data: upload_data,
 			success: function(data, textStatus, XMLHttpRequest){alert('Uploaded Data: ' + textStatus)}});
-	 }
+	  }
 
 	</script>
   </head>
 
-  <body onload="make_map()">
+  <body onload="make_map(FACILITIES_MODEL)">
 
   <p> Buildings in facility <b>"{{ inst_name }}"</b> (reload to see changes): </p>
 	
