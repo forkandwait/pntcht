@@ -7,6 +7,9 @@ handlers:
 - url: /stylesheets
   static_dir: stylesheets
 
+- url: /js
+  static_dir: js
+
 - url: /static/html
   static_dir: static/html
   mime_type: text/html

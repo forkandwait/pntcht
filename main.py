@@ -143,9 +143,9 @@ class UpdateInst(webapp.RequestHandler):
         comment = self.request.get('comment')
 
         ## update buildings
+        logging.debug('UpdateInst.post() unguessable_id: %s', unguessable_id)
         instq = db.GqlQuery("SELECT * FROM Institution WHERE unguessable_id = :1", unguessable_id)
         inst = instq.fetch(instq.count())[0]
-        logging.debug('UpdateInst.post() unguessable_id: %s', inst.unguessable_id)
         if inst:
             logging.debug("UpdateInst.post: %s %s" % (inst.unguessable_id, inst.name))
             for bldg in inst.building_set: 
@@ -156,6 +156,7 @@ class UpdateInst(webapp.RequestHandler):
                 pass
             comm = Comment()
             comm.inst = inst.key()
+            comm.msg = comment
             comm.put()
             pass
         else:
