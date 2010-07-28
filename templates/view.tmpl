@@ -4,7 +4,7 @@
 
   <head>
 	<title>View facilities</title>
-	<!-- Changed by: , 27-Jul-2010 -->
+	<!-- Changed by: , 28-Jul-2010 -->
 	
 	<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
 	<link type="text/css" rel="stylesheet" href="/stylesheets/main.css" />
@@ -19,15 +19,12 @@
 	  FACILITIES_MODEL = {};
 	  INST_NAME = "{{ inst_name }}";
 	  UNGUESSABLE_ID = "{{ unguessable_id }}";
+	  var MAP;
 	  
-	  function make_map(FMODEL) {
-	        // TODO -- make this grab from a KML feed rather than generated code (blech!)
+	  function make_map(fmodel, gmap) {
+	        // TODO -- make this grab from a KML feed rather than generated code (blech!) 
 
-	        // Base map
-		var myOptions = {
-		    mapTypeId: google.maps.MapTypeId.ROADMAP
-		};
-		var map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
+		gmap = new google.maps.Map(document.getElementById("map_canvas"), {mapTypeId: google.maps.MapTypeId.ROADMAP});
 
 		// Facilities markers -- generate a bunch of JS 
 		//    via django template loop, store array globally.
@@ -36,23 +33,18 @@
 		var marker = "";
 		var bounds = new google.maps.LatLngBounds();
 		{% for bldg in bldg_table %}
-		        make_point("{{ bldg.name }}", {{ bldg.pt }}, map, bounds, FMODEL);  // XXX bldg.pt expands 
+		        make_point("{{ bldg.name }}", {{ bldg.pt }}, gmap, bounds, fmodel);  // XXX bldg.pt expands 
 		{% endfor %}
 
 		// Zoom
-		map.setCenter(bounds.getCenter());
-		map.setZoom(14)
-
-		// null out the comment field
-		var sel = "#comment_input ";
-		$(sel).val("");
-
+		gmap.setCenter(bounds.getCenter());
+		gmap.setZoom(14); 
           }
 
 	</script>
   </head>
 
-  <body onload="make_map(FACILITIES_MODEL)">
+  <body onload="make_map(FACILITIES_MODEL, MAP); $('#comment_input').val('Map update');">
 
   <p> Buildings in facility <b>"{{ inst_name }}"</b> (reload to see changes): </p>
 	
