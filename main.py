@@ -5,7 +5,7 @@ import re
 import uuid
 import logging
 
-sys.path.append('./pymods')
+sys.path.append('./pymods')             # local copy of modules
 import simplejson
 
 from google.appengine.api import users
@@ -14,9 +14,12 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.ext import db
 from google.appengine.ext.webapp import template
 
+## Data models (TODO separate file)
+
 class Institution(db.Model):
     name = db.StringProperty()
     unguessable_id = db.StringProperty()
+    pass
 
 class Building(db.Model):
     name = db.StringProperty() 
@@ -24,13 +27,17 @@ class Building(db.Model):
     inst = db.ReferenceProperty(Institution)
     timestamp_create = db.DateTimeProperty(auto_now_add=True)
     timestamp_mod = db.DateTimeProperty(auto_now=True)
+    pass
 
 class Comment(db.Model):
     msg = db.StringProperty()
     inst = db.ReferenceProperty(Institution)
     timestamp = db.DateTimeProperty(auto_now=True)
     user = db.UserProperty(auto_current_user=True)
-    
+    pass
+
+## Handler classes
+
 class MainPage(webapp.RequestHandler):
     def get(self):
         if users.get_current_user():
@@ -112,9 +119,6 @@ class UploadInst(webapp.RequestHandler):
 
 class ViewInst(webapp.RequestHandler):
     def get(self):
-        if users.get_current_user():
-            logging.debug(users.get_current_user().nickname())
-
         ## get all buildings + comments for institution's id
         unguessable_id = self.request.get('unguessable_id')
         sqlstr = "select *  from Institution where unguessable_id = :1"
@@ -148,9 +152,10 @@ class UpdateInst(webapp.RequestHandler):
         inst = instq.fetch(instq.count())[0]
         if inst:
             logging.debug("UpdateInst.post: %s %s" % (inst.unguessable_id, inst.name))
-            for bldg in inst.building_set: 
-                a,b = model[bldg.name]['latlong'].strip('()').split(', ')
-                logging.debug("UpdateInst.post():updating building: %s. (%s, %s)." % (bldg.name, a, b))
+            for bldg in inst.building_set:
+                logging.debug("UpdateInst.post():updating building: %s \"%s\"." % \
+                              (bldg.name, model[bldg.name]['latlong'].strip('()')))                
+                a,b = re.split('\s*,\s*', model[bldg.name]['latlong'].strip('()'))
                 bldg.pt = db.GeoPt(float(a), float(b))
                 bldg.put()
                 pass
@@ -163,15 +168,39 @@ class UpdateInst(webapp.RequestHandler):
             logging.error("UpdateInst.post: Unable to find unguessable_id = %s. Returning." % unguessable_id)
             return
             pass
-        
+
+class BuildingFeed(webapp.RequestHandler):
+    ## Get KML^H^H JSON feed of building points
+
+    def get(self):
+        ## get institution, along with building set
+        unguessable_id = self.request.get('unguessable_id')
+        sqlstr = "select *  from Institution where unguessable_id = :1"
+        query = db.GqlQuery(sqlstr, unguessable_id)
+        if (query.count() != 1) or (not unguessable_id):
+            logging.error("ViewInst.get: bad number records returned for inst: %s" % query.count())
+            raise "wtf"
+
+        data = [];
+        inst = query.fetch(query.count())[0]
+        for bldg in inst.building_set:
+            #raise(str(dir(bldg.pt)))
+            data.append({'title':bldg.name, 'lat':bldg.pt.lat, 'lng':bldg.pt.lon})
+            pass
+
+        bldg_table_json = simplejson.dumps(data)
+        self.response.out.write(bldg_table_json)
+        pass
+
 
 ######
 def main():
     logging.getLogger().setLevel(logging.DEBUG)
     application = webapp.WSGIApplication([('/', MainPage),
-                                      ('/upload', UploadInst),
-                                      ('/view', ViewInst),
-                                      ('/update', UpdateInst)],
+                                          ('/upload', UploadInst),
+                                          ('/view', ViewInst),
+                                          ('/update', UpdateInst),
+                                          ('/buildingfeed', BuildingFeed)],
                                      debug=True)
     run_wsgi_app(application)
 

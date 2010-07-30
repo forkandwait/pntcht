@@ -4,7 +4,7 @@
 
   <head>
 	<title>View facilities</title>
-	<!-- Changed by: , 28-Jul-2010 -->
+	<!-- Changed by: , 30-Jul-2010 -->
 	
 	<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
 	<link type="text/css" rel="stylesheet" href="/stylesheets/main.css" />
@@ -14,37 +14,17 @@
 
 	<!-- viewing javascript functions -->
 	<script type="text/javascript" src="/js/view.js"></script>
-    
+
+	<!-- data models global to window, modified via pass by reference -->
 	<script type="text/javascript">
-	  FACILITIES_MODEL = {};
-	  INST_NAME = "{{ inst_name }}";
-	  UNGUESSABLE_ID = "{{ unguessable_id }}";
-	  var MAP;
-	  
-	  function make_map(fmodel, gmap) {
-	        // TODO -- make this grab from a KML feed rather than generated code (blech!) 
-
-		gmap = new google.maps.Map(document.getElementById("map_canvas"), {mapTypeId: google.maps.MapTypeId.ROADMAP});
-
-		// Facilities markers -- generate a bunch of JS 
-		//    via django template loop, store array globally.
-		var name = "";
-		var myLatLong = "";
-		var marker = "";
-		var bounds = new google.maps.LatLngBounds();
-		{% for bldg in bldg_table %}
-		        make_point("{{ bldg.name }}", {{ bldg.pt }}, gmap, bounds, fmodel);  // XXX bldg.pt expands 
-		{% endfor %}
-
-		// Zoom
-		gmap.setCenter(bounds.getCenter());
-		gmap.setZoom(14); 
-          }
-
+	  var FACILITIES_MODEL ={} ;
+	  var UNGUESSABLE_ID = "{{ unguessable_id }}";
+	  var MAP; // initialized inside make map          
 	</script>
+	
   </head>
 
-  <body onload="make_map(FACILITIES_MODEL, MAP); $('#comment_input').val('Map update');">
+  <body onload="make_map(FACILITIES_MODEL, MAP, UNGUESSABLE_ID); $('#comment_input').val('');">
 
   <p> Buildings in facility <b>"{{ inst_name }}"</b> (reload to see changes): </p>
 	
@@ -62,11 +42,10 @@
 
 	<hr>
 	<table id="comment_table" border="1">
-	  <tr><th> Change Message </th><th>Timestamp</th><th>User</th></tr>
+	  <tr><th> Change Message </th><th>User</th></tr>
 	  {% for comm in comments %}
 	    <tr class="comment_row" id="rownum{{forloop.counter}}">
 	      <td> {{ comm.msg }} </td>
-	      <td> {{ comm.timestamp }}</td>
 	      <td> {{ comm.user }} </td>
 	    </tr>
           {% endfor %}

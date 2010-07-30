@@ -1,0 +1,34 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<head>
+
+    <title>Jquery - JSON Snarf</title>
+    <!-- Changed by: , 30-Jul-2010 -->
+
+    <script src="http://code.jquery.com/jquery-1.4.2.js"></script>
+   
+    <script  type="text/javascript">
+      var myData = getSomething("ca5b98bd-e41b-48a7-9448-9022e3630f45");
+
+      function getSomething(unguessable_id){
+          var result = null;
+          $.ajax({
+              async: false,
+              url: "/buildingfeed",
+              data: {'unguessable_id':unguessable_id},
+              dataType: "json",
+              success: function(data){
+                  result = data;
+              }
+          });
+          return result;
+      }
+      </script>
+</head>
+
+<body>
+
+  <p id="foo">help me!</p>
+
+</body>
